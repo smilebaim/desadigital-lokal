@@ -7,12 +7,12 @@ const HTML_CONTENT = "\n  \u003c!-- Toast Container --\u003e\n  \u003cdiv id=\"t
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const existing = document.querySelector(script[src='\']);
+    const existing = document.querySelector(`script[src="${src}"]`);
     if (existing) { resolve(); return; }
     const s = document.createElement('script');
     s.src = src;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error(Failed: \));
+    s.onerror = () => reject(new Error(`Failed to load script: ${src}`));
     document.head.appendChild(s);
   });
 }
@@ -29,7 +29,6 @@ export default function DashboardClient() {
         await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');
         await loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js');
         await loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js');
-        await loadScript('/js/mobile-utils.js');
         await loadScript('/js/dashboard-data.js');
         await loadScript('/js/dashboard-main.js');
       } catch (e) {
