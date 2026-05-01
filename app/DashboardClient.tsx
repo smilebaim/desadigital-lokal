@@ -7,43 +7,23 @@ const HTML_CONTENT = "\n  \u003c!-- Toast Container --\u003e\n  \u003cdiv id=\"t
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const scripts = document.querySelectorAll('script');
-    for (let i = 0; i < scripts.length; i++) {
-      if (scripts[i].getAttribute('src') === src) { resolve(); return; }
-    }
+    const existing = document.querySelector(script[src='\']);
+    if (existing) { resolve(); return; }
     const s = document.createElement('script');
     s.src = src;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Failed to load: ' + src));
+    s.onerror = () => reject(new Error(Failed: \));
     document.head.appendChild(s);
   });
 }
 
 export default function DashboardClient() {
   useEffect(() => {
-    // Immediately inject stubs so onclick handlers don't throw 'not defined'
-    // during the async script loading window
-    const w = window as unknown as Record<string, unknown>;
-    const noop = () => {};
-    const stubs: string[] = [
-      'switchTab','refreshData','focusMapOnCategory','toggleFaskesLayer',
-      'toggleLayer','togglePolygonLayer','applyFilter','resetFilters',
-      'changePolygonLevel','searchPolygon','applyCluster6Filter',
-      'changeSektorPage','slideOrangHilang','onBantuanFilterChange',
-      'renderBantuanTable','toggleMobileMenu','switchTabMobile','toggleLayerControl'
-    ];
-    stubs.forEach(fn => { if (!w[fn]) w[fn] = noop; });
-
     async function loadAllScripts() {
       try {
         await loadScript('https://cdn.tailwindcss.com/');
-        const tw = (window as unknown as Record<string, unknown>).tailwind as { config?: unknown } | undefined;
-        if (tw) {
-          tw.config = { theme: { extend: { colors: { primary: {
-            50:'#fef2f2', 100:'#fee2e2', 200:'#fecaca', 300:'#fca5a5',
-            400:'#f87171', 500:'#ef4444', 600:'#dc2626', 700:'#b91c1c',
-            800:'#991b1b', 900:'#7f1d1d'
-          }}}}}
+        if (typeof (window as any).tailwind !== 'undefined') {
+          (window as any).tailwind.config = { theme: { extend: { colors: { primary: { 50:'#fef2f2',100:'#fee2e2',200:'#fecaca',300:'#fca5a5',400:'#f87171',500:'#ef4444',600:'#dc2626',700:'#b91c1c',800:'#991b1b',900:'#7f1d1d' } } } } };
         }
         await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
         await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');

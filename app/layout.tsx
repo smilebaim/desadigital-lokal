@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Dashboard Monitoring Bencana Aceh",
   description: "Sistem Informasi Aceh Tanggap Bencana - Dashboard Monitoring Bencana Hidrometeorologi Aceh",
+  keywords: "bencana, aceh, monitoring, hidrometeorologi, dashboard",
 };
 
 export default function RootLayout({
@@ -14,13 +15,67 @@ export default function RootLayout({
   return (
     <html lang="id">
       <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        {/* Google Fonts - Inter */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+
+        {/* Tailwind CSS CDN - untuk memastikan kompatibilitas kelas yang sama */}
+        <script src="https://cdn.tailwindcss.com/" async></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.tailwindConfigReady = false;
+              document.addEventListener('DOMContentLoaded', function() {
+                if (typeof tailwind !== 'undefined') {
+                  tailwind.config = {
+                    theme: {
+                      extend: {
+                        colors: {
+                          primary: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            200: '#fecaca',
+                            300: '#fca5a5',
+                            400: '#f87171',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d',
+                          }
+                        }
+                      }
+                    }
+                  };
+                }
+              });
+            `,
+          }}
+        />
+
+        {/* Leaflet CSS */}
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        />
+
+        {/* Leaflet MarkerCluster CSS */}
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+        />
+
+        {/* Font Awesome */}
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
       </head>
       <body className="bg-white text-gray-800 font-sans">
         {children}

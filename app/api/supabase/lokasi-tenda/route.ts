@@ -1,28 +1,19 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { KABUPATEN, rand, pick } from "@/lib/dummy";
-
+import { KABUPATEN, rand } from "@/lib/dummy";
 export async function GET() {
-  const { data, error } = await supabase
-    .from("lokasi_tenda")
-    .select("*")
-    .order("kabupaten");
-
-  if (!error && data && data.length > 0) {
-    return NextResponse.json({ data, total: data.length, source: "supabase" });
-  }
-
-  const dummy = KABUPATEN.slice(0, 8).map((kab, i) => ({
-    nama: `Tenda Pengungsian ${kab.nama}`,
-    kabupaten: kab.nama,
-    kecamatan: "Kecamatan " + (i + 1),
-    desa: "Desa " + (i + 1),
-    lat: kab.lat + (Math.random() - 0.5) * 0.05,
-    lng: kab.lng + (Math.random() - 0.5) * 0.05,
-    jumlah_tenda: rand(5, 50),
-    kapasitas: rand(50, 500),
-    jumlah_pengungsi: rand(30, 400),
-    status: "aktif",
-  }));
-  return NextResponse.json({ data: dummy, total: dummy.length, source: "dummy" });
+  const data = KABUPATEN.slice(0,12).flatMap((kab,i)=>
+    Array.from({length:rand(1,3)},(_,j)=>({
+      id: `TND-${kab.id}-${j}`,
+      nama: `Tenda Pengungsian ${kab.nama} ${j+1}`,
+      kabupaten_kota: kab.nama,
+      kecamatan: `Kec. ${j+1}`,
+      lat: kab.lat+(Math.random()-0.5)*0.2,
+      lng: kab.lng+(Math.random()-0.5)*0.2,
+      kapasitas: rand(50,200),
+      terisi: rand(20,150),
+      kondisi: ["baik","rusak_ringan"][j%2],
+      sumber: ["BNPB","PMI","TNI","Swadaya"][j%4],
+    }))
+  );
+  return NextResponse.json({ data, total: data.length });
 }

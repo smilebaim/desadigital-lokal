@@ -1,135 +1,36 @@
-# Dashboard Monitoring Bencana Aceh
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Dashboard monitoring bencana hidrometeorologi Aceh berbasis Next.js 16 (App Router), dimigrasi dari aplikasi static HTML dengan mempertahankan tampilan dan fungsionalitas asli.
+## Getting Started
 
-## Fitur Utama
-
-- **4 Tab Utama**: Dampak, Peta Operasi, Pengungsi, Bantuan Logistik
-- **Peta Interaktif** menggunakan Leaflet + MarkerCluster (4 peta: Dampak, Operasi, Pengungsi, Bantuan)
-- **Grafik Real-time** dengan Chart.js (Pie, Bar, Doughnut)
-- **17 API Routes** dengan dummy data realistis (siap diganti backend Supabase)
-- **Data Dummy** mencakup 23 kabupaten/kota Aceh
-- **Responsive** untuk desktop dan mobile
-
-## Stack Teknologi
-
-| Layer | Teknologi |
-|---|---|
-| Framework | Next.js 16.2.4 (App Router, Turbopack) |
-| Frontend | React 19, TypeScript 5 |
-| Styling | CSS Kustom + Tailwind CSS (CDN) |
-| Peta | Leaflet 1.9.4 + LeafletMarkerCluster |
-| Grafik | Chart.js 4.4 + chartjs-plugin-datalabels |
-| Icons | Font Awesome 6.4 |
-| Deployment | Vercel / VPS (Node.js) |
-
-## Struktur Proyek
-
-```
-app/
-├── page.tsx              → Entry point (client-only mounting)
-├── DashboardClient.tsx   → Komponen utama dashboard + script loader
-├── layout.tsx            → Root layout + CSS dependencies
-├── dashboard.css         → Styling kustom dashboard
-├── api/
-│   ├── supabase/         → 8 endpoint Supabase (dummy → siap diganti real)
-│   └── wilayah/polygon/  → 3 endpoint GeoJSON wilayah Aceh
-└── realtime/             → 6 endpoint realtime bencana
-
-lib/
-└── dummy.ts              → Data master (kabupaten, sektor, helper)
-
-public/js/
-├── dashboard-main.js     → Logic utama dashboard (fetch, map, chart)
-├── dashboard-data.js     → Fungsi data utilities
-└── mobile-utils.js       → Mobile menu + onclick stubs
-```
-
-## Cara Menjalankan
+First, run the development server:
 
 ```bash
-# Clone repository
-git clone https://github.com/smilebaim/desadigital-lokal
-cd dashboard-bencana
-
-# Install dependencies
-npm install
-
-# Jalankan development server
 npm run dev
-# Buka http://localhost:3000
-
-# Build production
-npm run build
-npm run start
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## API Endpoints
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Realtime (dipanggil otomatis oleh dashboard-main.js)
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-| Endpoint | Deskripsi |
-|---|---|
-| `GET /realtime/bencana` | Data titik bencana (40+ records) |
-| `GET /realtime/jaringan` | Status jaringan telekomunikasi |
-| `GET /realtime/puskesmas` | Lokasi puskesmas |
-| `GET /realtime/rsud` | Lokasi RSUD |
-| `GET /realtime/v2` | Fasyankes lainnya (klinik, apotek) |
-| `GET /realtime/bantuan-logistik` | Data distribusi bantuan |
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Supabase API
+## Learn More
 
-| Endpoint | Deskripsi |
-|---|---|
-| `GET /api/supabase/penduduk` | Data penduduk per kabupaten |
-| `GET /api/supabase/cluster` | Data kerusakan per sektor |
-| `GET /api/supabase/pertanian` | Data kerusakan pertanian |
-| `GET /api/supabase/posko` | Lokasi posko pengungsian |
-| `GET /api/supabase/orang-hilang` | Data orang hilang/ditemukan |
-| `GET /api/supabase/lokasi-tenda` | Lokasi tenda pengungsian |
-| `GET /api/supabase/fasilitas-publik` | Fasilitas publik rusak |
-| `GET /api/supabase/village-distribution` | Distribusi desa per kabupaten |
+To learn more about Next.js, take a look at the following resources:
 
-### Wilayah
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-| Endpoint | Deskripsi |
-|---|---|
-| `GET /api/wilayah/polygon/geojson` | GeoJSON batas wilayah Aceh |
-| `GET /api/wilayah/polygon/search` | Pencarian wilayah |
-| `GET /api/wilayah/polygon/levels` | Level admin (kab/kec/desa) |
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Migrasi ke Backend Real
+## Deploy on Vercel
 
-Untuk mengganti dummy data dengan backend Supabase yang sesungguhnya, edit file di `app/api/`:
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-```typescript
-// Contoh: app/api/supabase/penduduk/route.ts
-// Ganti return NextResponse.json(dummyData)
-// dengan fetch ke Supabase:
-
-import { createClient } from '@supabase/supabase-js'
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!)
-const { data } = await supabase.from('penduduk').select('*')
-return NextResponse.json({ data })
-```
-
-## Environment Variables (untuk produksi)
-
-Buat file `.env.local` (tidak di-commit):
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-```
-
-## Catatan Pengembangan
-
-- **Dummy Data**: Semua data adalah contoh realistis Aceh. Ubah di `lib/dummy.ts` dan masing-masing `route.ts`
-- **Script Loading**: Library (Leaflet, Chart.js) diload secara async via `useEffect` di `DashboardClient.tsx`
-- **Hydration**: Komponen dirender client-only untuk menghindari SSR mismatch dengan HTML asli
-- **Tailwind CDN**: Digunakan untuk mempertahankan kompatibilitas styling. Untuk produksi, pertimbangkan migrasi ke Tailwind PostCSS
-
-## Dikembangkan oleh
-
-TIM SIAT DISKOMINFOSA — Dinas Komunikasi, Informatika dan Persandian Aceh  
-© 2026 Pemerintah Aceh
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
