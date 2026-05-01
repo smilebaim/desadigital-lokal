@@ -1,19 +1,32 @@
-﻿import { NextResponse } from "next/server";
-import { KABUPATEN, rand } from "@/lib/dummy";
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+import { KABUPATEN, rand, pick } from "@/lib/dummy";
+
 export async function GET() {
-  const types = ["Jembatan","Jalan","Gedung Sekolah","Kantor Desa","Mesjid","Pasar"];
-  const data = KABUPATEN.flatMap((kab)=>
-    Array.from({length:rand(2,5)},(_,j)=>({
-      id: `FP-${kab.id}-${j}`,
-      nama: `${types[j%types.length]} ${kab.nama} ${j+1}`,
-      tipe: types[j%types.length],
-      kabupaten_kota: kab.nama,
-      kecamatan: `Kec. ${j+1}`,
-      lat: kab.lat+(Math.random()-0.5)*0.3,
-      lng: kab.lng+(Math.random()-0.5)*0.3,
-      kondisi: ["rusak_berat","rusak_sedang","rusak_ringan"][j%3],
-      nilai_kerusakan: rand(10000000,2000000000),
-    }))
-  );
-  return NextResponse.json({ data, total: data.length });
+  const { data, error } = await supabase
+    .from("fasilitas_publik")
+    .select("*")
+    .order("kabupaten");
+
+  if (!error && data && data.length > 0) {
+    return NextResponse.json({ data, total: data.length, source: "supabase" });
+  }
+
+  const jenis = ["jembatan","jalan","sekolah","masjid","kantor","pasar"];
+  const kondisi = ["rusak_berat","rusak_sedang","rusak_ringan"];
+  const dummy = Array.from({ length: 10 }, (_, i) => {
+    const kab = pick(KABUPATEN);
+    return {
+      nama: `${pick(jenis)} ${kab.nama} ${i + 1}`,
+      jenis: pick(jenis),
+      kabupaten: kab.nama,
+      kecamatan: "Kecamatan " + (i + 1),
+      desa: "Desa " + (i + 1),
+      kondisi: pick(kondisi),
+      estimasi_kerugian: rand(200000000, 8000000000),
+      lat: kab.lat + (Math.random() - 0.5) * 0.1,
+      lng: kab.lng + (Math.random() - 0.5) * 0.1,
+    };
+  });
+  return NextResponse.json({ data: dummy, total: dummy.length, source: "dummy" });
 }
