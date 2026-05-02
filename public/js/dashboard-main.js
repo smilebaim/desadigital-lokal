@@ -1,4 +1,84 @@
 // =====================================================
+// TAB SWITCHING FUNCTIONS
+// =====================================================
+
+/**
+ * Switch active tab: hides all tab contents, shows the target one,
+ * updates tab button active states, and lazy-loads tab data if needed.
+ */
+function switchTab(tabId) {
+  // Hide all tab contents
+  document.querySelectorAll('.tab-content').forEach(el => {
+    el.classList.remove('active');
+  });
+
+  // Show target tab
+  const target = document.getElementById('content-' + tabId);
+  if (target) target.classList.add('active');
+
+  // Update tab button active states
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  const activeBtn = document.getElementById('tab-' + tabId);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // Update state
+  if (typeof state !== 'undefined') {
+    state.currentTab = tabId;
+  }
+
+  // Lazy-load data for this tab if not yet loaded
+  if (typeof loadTabData === 'function') {
+    loadTabData(tabId);
+  }
+
+  // Invalidate maps after a short delay so they render correctly
+  setTimeout(() => {
+    ['map', 'mapOperasi', 'mapPengungsi', 'mapBantuan'].forEach(mapName => {
+      if (window[mapName] && typeof window[mapName].invalidateSize === 'function') {
+        window[mapName].invalidateSize();
+      }
+    });
+  }, 100);
+}
+
+/**
+ * Trigger a full data refresh for the current tab.
+ */
+function refreshData() {
+  const tabId = (typeof state !== 'undefined') ? state.currentTab : 'dampak';
+  if (typeof state !== 'undefined') {
+    // Reset loaded state so data is re-fetched
+    if (state.tabLoaded) state.tabLoaded[tabId] = false;
+  }
+  if (typeof loadTabData === 'function') {
+    loadTabData(tabId);
+  }
+}
+
+/**
+ * Focus the map on a specific damage category.
+ * @param {string} category - category key (e.g. 'korban', 'pengungsi')
+ * @param {HTMLElement} el - the clicked element (for highlighting)
+ */
+function focusMapOnCategory(category, el) {
+  // Switch to dampak tab first
+  switchTab('dampak');
+
+  // Highlight clicked card
+  document.querySelectorAll('.kpi-card').forEach(card => {
+    card.classList.remove('ring-2', 'ring-primary-500');
+  });
+  if (el) el.classList.add('ring-2', 'ring-primary-500');
+
+  // Pan/zoom map to relevant layer if map is ready
+  if (window.map && typeof window.map.fitBounds === 'function') {
+    try { window.map.fitBounds(window.map.getBounds()); } catch (e) {}
+  }
+}
+
+// =====================================================
 // POPUP PAGINATION STATE & FUNCTIONS
 // =====================================================
 const popupPageState = {};
