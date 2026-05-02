@@ -30,5 +30,26 @@ export async function GET() {
       updated_at: new Date().toISOString(),
     }));
   });
-  return NextResponse.json({ data, total: data.length, updated_at: new Date().toISOString() });
+  const total_jiwa = data.reduce((a, b) => a + b.korban_meninggal + b.korban_luka + b.korban_hilang, 0);
+  const total_pengungsi = data.reduce((a, b) => a + b.pengungsi, 0);
+  const total_titik_pengungsian = data.length; // Assume each record is a point
+  const total_rumah = data.reduce((a, b) => a + b.rumah_rusak_berat + b.rumah_rusak_sedang + b.rumah_rusak_ringan, 0);
+  const total_sawah = data.reduce((a, b) => a + b.sawah_ha, 0);
+  const total_fasum = data.reduce((a, b) => a + b.fasum_rusak, 0);
+  const total_kebun = data.reduce((a, b) => a + b.kebun_ha, 0);
+  const total_tambak = data.reduce((a, b) => a + b.tambak_ha, 0);
+
+  return NextResponse.json({ 
+    data, 
+    total: data.length, 
+    total_jiwa,
+    total_pengungsi,
+    total_titik_pengungsian,
+    total_rumah,
+    total_sawah,
+    total_fasum,
+    total_kebun,
+    total_tambak,
+    updated_at: new Date().toISOString() 
+  });
 }
