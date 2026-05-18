@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 const KABUPATEN_POLYGONS = [
   { id:"1101",nama:"Simeulue",lat:2.69,lng:96.05 },
@@ -55,5 +55,8 @@ export async function GET(request: Request) {
     geometry: { type:"Polygon", coordinates: makeBox(kab.lat, kab.lng) }
   }));
 
-  return NextResponse.json({ type:"FeatureCollection", features, total: features.length });
+  return NextResponse.json({ 
+    polygons: { type:"FeatureCollection", features }, 
+    total: features.length 
+  });
 }
