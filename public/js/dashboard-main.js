@@ -1,99 +1,19 @@
 // =====================================================
-// TAB SWITCHING FUNCTIONS
-// =====================================================
-
-/**
- * Switch active tab: hides all tab contents, shows the target one,
- * updates tab button active states, and lazy-loads tab data if needed.
- */
-function switchTab(tabId) {
-  // Hide all tab contents
-  document.querySelectorAll('.tab-content').forEach(el => {
-    el.classList.remove('active');
-  });
-
-  // Show target tab
-  const target = document.getElementById('content-' + tabId);
-  if (target) target.classList.add('active');
-
-  // Update tab button active states
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  const activeBtn = document.getElementById('tab-' + tabId);
-  if (activeBtn) activeBtn.classList.add('active');
-
-  // Update state
-  if (typeof state !== 'undefined') {
-    state.currentTab = tabId;
-  }
-
-  // Lazy-load data for this tab if not yet loaded
-  if (typeof loadTabData === 'function') {
-    loadTabData(tabId);
-  }
-
-  // Invalidate maps after a short delay so they render correctly
-  setTimeout(() => {
-    ['map', 'mapOperasi', 'mapPengungsi', 'mapBantuan'].forEach(mapName => {
-      if (window[mapName] && typeof window[mapName].invalidateSize === 'function') {
-        window[mapName].invalidateSize();
-      }
-    });
-  }, 100);
-}
-
-/**
- * Trigger a full data refresh for the current tab.
- */
-function refreshData() {
-  const tabId = (typeof state !== 'undefined') ? state.currentTab : 'dampak';
-  if (typeof state !== 'undefined') {
-    // Reset loaded state so data is re-fetched
-    if (state.tabLoaded) state.tabLoaded[tabId] = false;
-  }
-  if (typeof loadTabData === 'function') {
-    loadTabData(tabId);
-  }
-}
-
-/**
- * Focus the map on a specific damage category.
- * @param {string} category - category key (e.g. 'korban', 'pengungsi')
- * @param {HTMLElement} el - the clicked element (for highlighting)
- */
-function focusMapOnCategory(category, el) {
-  // Switch to dampak tab first
-  switchTab('dampak');
-
-  // Highlight clicked card
-  document.querySelectorAll('.kpi-card').forEach(card => {
-    card.classList.remove('ring-2', 'ring-primary-500');
-  });
-  if (el) el.classList.add('ring-2', 'ring-primary-500');
-
-  // Pan/zoom map to relevant layer if map is ready
-  if (window.map && typeof window.map.fitBounds === 'function') {
-    try { window.map.fitBounds(window.map.getBounds()); } catch (e) {}
-  }
-}
-
-// =====================================================
 // POPUP PAGINATION STATE & FUNCTIONS
 // =====================================================
-const popupPageState = {};
+window.popupPageState = window.popupPageState || {};
 
 function changePopupPage(popupId, delta) {
-  if (!popupPageState[popupId]) {
-    popupPageState[popupId] = 1;
+  if (!window.popupPageState[popupId]) {
+    window.popupPageState[popupId] = 1;
   }
 
   const totalPages = 2;
-  const newPage = popupPageState[popupId] + delta;
+  const newPage = window.popupPageState[popupId] + delta;
 
   if (newPage < 1 || newPage > totalPages) return;
 
-  popupPageState[popupId] = newPage;
+  window.popupPageState[popupId] = newPage;
 
   // Hide all pages, show current
   for (let i = 1; i <= totalPages; i++) {
@@ -115,7 +35,7 @@ function changePopupPage(popupId, delta) {
 // =====================================================
 const CONFIG = {
   // Use relative path since served from same server
-  API_BASE: window.location.origin,
+  API_BASE: window.location.origin + '/api',
   // Supabase config moved to server-side proxy for security & performance
   GEOJSON_URL: 'https://php.ckan-dev.siat.web.id/geojson-kotakab-aceh.json',
   REFRESH_INTERVAL: 5 * 60 * 1000, // 5 minutes
@@ -726,7 +646,7 @@ async function fetchSupabase(table, params = '', options = {}) {
 
   try {
     const response = await fetch(
-      `${CONFIG.API_BASE}/api/supabase/table/${table}?page=1&perPage=${options.limit || 50}`
+      `${CONFIG.API_BASE}/supabase/table/${table}?page=1&perPage=${options.limit || 50}`
     );
     if (!response.ok) throw new Error(`Proxy HTTP ${response.status}`);
     const result = await response.json();
@@ -765,7 +685,7 @@ async function fetchSupabaseEndpoint(endpoint, cacheKey, useLocalStorage = true,
   }
 
   try {
-    const response = await fetch(`${CONFIG.API_BASE}/api/supabase/${endpoint}`, {
+    const response = await fetch(`${CONFIG.API_BASE}/supabase/${endpoint}`, {
       headers: {
         'Accept': 'application/json',
         'Cache-Control': 'max-age=60'
@@ -2317,7 +2237,7 @@ async function loadFasyankesTimeline(fasyankesId, namaFasyankes) {
 
   try {
     const response = await fetch(
-      `${CONFIG.API_BASE}/api/fasyankes/${fasyankesId}/timeline`
+      `${CONFIG.API_BASE}/fasyankes/${fasyankesId}/timeline`
     );
     if (!response.ok) {
       // No timeline data yet
@@ -5800,19 +5720,32 @@ async function refreshAllTabsData() {
   isRefreshing = false;
 }
 
+function getKontrolSettings() {
+  try {
+    const raw = localStorage.getItem('desadigital-kontrol-settings');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn('[Init] Invalid kontrol settings:', e);
+    return null;
+  }
+}
+
 async function init() {
   // Performance: measure load time
   const startTime = performance.now();
+  const kontrolSettings = getKontrolSettings();
+  const initialTab = kontrolSettings?.defaultPublicTab || 'dampak';
 
   // Log cache stats
   console.log('[Init] LocalStorage cache stats:', localCache.stats());
 
-  // OPTIMIZED: Only load data for the initial tab (dampak)
+  // OPTIMIZED: Only load data for the initial tab
   // Other tabs will be loaded on demand when user switches to them
-  await loadTabData('dampak');
+  await loadTabData(initialTab);
 
-  // Initialize first tab
-  await switchTab('dampak');
+  // Initialize first tab (respects panel kontrol default)
+  await switchTab(initialTab);
 
   const loadTime = ((performance.now() - startTime) / 1000).toFixed(2);
   console.log(`[Init] Dashboard loaded in ${loadTime}s (lazy loading enabled)`);
@@ -5823,13 +5756,15 @@ async function init() {
     preloadOtherTabs();
   }, 2000); // Wait 2 seconds after initial load
 
-  // // Setup auto-refresh (optional - uncomment if needed)
-  // setInterval(async () => {
-  //   console.log('Auto-refresh triggered');
-  //   apiCache.clear();
-  //   await loadTabData(state.currentTab, true);
-  //   switchTab(state.currentTab);
-  // }, CONFIG.REFRESH_INTERVAL);
+  const refreshMinutes = kontrolSettings?.autoRefreshMinutes;
+  if (refreshMinutes && refreshMinutes > 0) {
+    const intervalMs = refreshMinutes * 60 * 1000;
+    setInterval(async () => {
+      console.log('[Init] Auto-refresh from panel kontrol');
+      await refreshAllTabsData();
+    }, intervalMs);
+    console.log(`[Init] Auto-refresh setiap ${refreshMinutes} menit`);
+  }
 }
 
 /**
@@ -5867,5 +5802,33 @@ async function preloadOtherTabs() {
   console.log('[Preload] Background preload complete');
 }
 
+// Expose handlers for inline HTML attributes (onclick/onchange)
+Object.assign(window, {
+  switchTab,
+  refreshData,
+  focusMapOnCategory,
+  changePopupPage,
+  changeSektorPage,
+  applyFilter,
+  resetFilters,
+  toggleLayer,
+  toggleFaskesLayer,
+  togglePolygonLayer,
+  applyCluster6Filter,
+  changePolygonLevel,
+  searchPolygon,
+  onBantuanFilterChange,
+  renderBantuanTable,
+  slideOrangHilang,
+  changeDampakPolygonLevel,
+});
+window.__dashboardMainReady = true;
+
 // Start the application
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  // If loaded dynamically after DOMContentLoaded, init immediately
+  setTimeout(init, 0);
+}
+
