@@ -1,10 +1,26 @@
 ﻿import { NextResponse } from "next/server";
-const WILAYAH = ["Simeulue","Aceh Singkil","Aceh Selatan","Aceh Tenggara","Aceh Timur","Aceh Tengah","Aceh Barat","Aceh Besar","Pidie","Bireuen","Aceh Utara","Aceh Barat Daya","Gayo Lues","Aceh Tamiang","Nagan Raya","Aceh Jaya","Bener Meriah","Pidie Jaya","Kota Banda Aceh","Kota Sabang","Kota Langsa","Kota Lhokseumawe","Kota Subulussalam"];
+import { getPolygonItems } from "@/lib/polygon-data";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const q = (searchParams.get("q")||"").toLowerCase();
-  const results = WILAYAH.filter(w=>w.toLowerCase().includes(q)).slice(0,10).map((nama,i)=>({
-    kode: `110${i+1}`, nama, level: 2, parent: "11"
-  }));
+  const q = (searchParams.get("q") || "").toLowerCase();
+  const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "20")));
+
+  const merged = [
+    ...getPolygonItems(2, "11"),
+    ...getPolygonItems(3, "11"),
+    ...getPolygonItems(4, "11"),
+  ];
+
+  const results = merged
+    .filter((w) => w.nama.toLowerCase().includes(q))
+    .slice(0, limit)
+    .map((w) => ({
+      kode: w.kode,
+      nama: w.nama,
+      level: w.level,
+      parent: w.parent,
+    }));
+
   return NextResponse.json({ data: results, total: results.length });
 }

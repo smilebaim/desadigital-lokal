@@ -42,6 +42,7 @@ const CONFIG = {
   MAP_CENTER: [4.695135, 96.749397],
   MAP_ZOOM: 8,
 };
+const POLYGON_ENABLED = false;
 
 // =====================================================
 // GLOBAL STATE
@@ -1257,11 +1258,8 @@ function initDampakMap() {
   // Add legend control
   addMapLegend(state.maps.dampak);
 
-  // Add area level filter control inside the map
-  addDampakFilterControl(state.maps.dampak);
-
-  // Load polygon GeoJSON with combined bencana data
-  loadDampakPolygonGeoJSON(state.maps.dampak);
+  // Polygon is disabled: use regular GeoJSON overlay only
+  loadGeoJSON(state.maps.dampak);
 }
 
 // Add filter control for Dampak map (area level selection)
@@ -1834,19 +1832,26 @@ function initPetaOperasiMap() {
   // Load GeoJSON boundaries
   loadGeoJSON(state.maps.operasi);
 
-  // Add polygon legend (hidden by default, shown when polygon layer is active)
-  addPolygonLegend(state.maps.operasi);
+  if (POLYGON_ENABLED) {
+    // Add polygon legend (hidden by default, shown when polygon layer is active)
+    addPolygonLegend(state.maps.operasi);
 
-  // Initialize and add polygon layer by default (first layer so it's behind markers)
-  initPolygonLayer(state.maps.operasi).then(() => {
-    // Add polygon layer to map if it exists
-    if (polygonState.layer) {
-      state.maps.operasi.addLayer(polygonState.layer);
-      // Show polygon legend
-      const legend = document.getElementById('polygon-legend-content');
-      if (legend) legend.style.display = 'block';
-    }
-  });
+    // Initialize and add polygon layer by default (first layer so it's behind markers)
+    initPolygonLayer(state.maps.operasi).then(() => {
+      // Add polygon layer to map if it exists
+      if (polygonState.layer) {
+        state.maps.operasi.addLayer(polygonState.layer);
+        // Show polygon legend
+        const legend = document.getElementById('polygon-legend-content');
+        if (legend) legend.style.display = 'block';
+      }
+    });
+  } else {
+    const checkbox = document.getElementById('layer-polygon');
+    const controls = document.getElementById('polygon-controls');
+    if (checkbox) checkbox.checked = false;
+    if (controls) controls.style.display = 'none';
+  }
 
   // Add markers to all layers
   addBanlogMarkers();
@@ -4976,6 +4981,11 @@ async function loadGeoJSON(map) {
 
 // Refresh GeoJSON layer style and popups with updated bencana data
 function refreshGeoJSONLayer(map) {
+  if (!POLYGON_ENABLED && state.layers.dampakPolygon && map === state.maps.dampak) {
+    map.removeLayer(state.layers.dampakPolygon);
+    state.layers.dampakPolygon = null;
+  }
+
   // Check if we're using the new dampak polygon layer
   if (state.layers.dampakPolygon && map === state.maps.dampak) {
     // Refresh the dampak polygon layer
@@ -5491,6 +5501,16 @@ function togglePolygonLayer() {
   const controls = document.getElementById('polygon-controls');
   const legend = document.getElementById('polygon-legend-content');
 
+  if (!POLYGON_ENABLED) {
+    checkbox.checked = false;
+    if (polygonState.layer && state.maps.operasi.hasLayer(polygonState.layer)) {
+      state.maps.operasi.removeLayer(polygonState.layer);
+    }
+    if (controls) controls.style.display = 'none';
+    if (legend) legend.style.display = 'none';
+    return;
+  }
+
   if (checkbox.checked) {
     if (!polygonState.layer) {
       // Load polygon data if not already loaded
@@ -5611,7 +5631,7 @@ async function selectPolygonSearchResult(index) {
       .openOn(state.maps.operasi);
 
     // Load breakdown data for the popup
-    setTimeout(() => loadPolygonBreakdown(kode), 100);
+    setTimeout(() => loadPolygonBreakdown(item.kode), 100);
 
     // Remove highlight after 5 seconds
     setTimeout(() => {
